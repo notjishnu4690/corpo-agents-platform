@@ -22,7 +22,12 @@ export default function Onboarding() {
   const [isLoading, setIsLoading] = useState(false);
   const [showTip, setShowTip] = useState(true);
 
-  const setupMutation = trpc.company.setup.useMutation();
+  const utils = trpc.useUtils();
+  const setupMutation = trpc.company.setup.useMutation({
+    onSuccess: () => {
+      utils.company.profile.invalidate();
+    },
+  });
 
   const toggleAgent = (agentId: string) => {
     setSelectedAgents((prev) =>
@@ -38,15 +43,20 @@ export default function Onboarding() {
 
     setIsLoading(true);
     try {
-      await setupMutation.mutateAsync({
+      const result = await setupMutation.mutateAsync({
         companyName,
         companyDescription,
         selectedAgents: JSON.stringify(selectedAgents),
       });
+      
+      if (result === null) {
+        throw new Error("Database not available. Please check your connection.");
+      }
+
       toast.success("Company setup complete!");
       navigate("/dashboard");
-    } catch (error) {
-      toast.error("Failed to save company setup");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save company setup");
       console.error(error);
     } finally {
       setIsLoading(false);
