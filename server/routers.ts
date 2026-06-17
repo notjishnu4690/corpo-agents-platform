@@ -1,10 +1,11 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { invokeLLM } from "./_core/llm";
+import { z } from "zod";
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -17,12 +18,38 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  agents: router({
+    chat: protectedProcedure
+      .input(z.object({
+        agentId: z.enum(["ceo", "finance", "hr", "reporter"]),
+        message: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => {
+        const agentPrompts: Record<string, string> = {
+          ceo: "You are the CEO Advisor, a strategic AI agent for CorpoAgents. Provide executive-level insights and recommendations. Be concise and focused on business impact. You help leadership make data-driven decisions.",
+          finance: "You are the Finance Copilot, an expert financial AI agent for CorpoAgents. Analyze spending, identify risks, and flag unusual financial movements. Provide actionable financial insights and recommendations.",
+          hr: "You are the HR Copilot, a human resources AI agent for CorpoAgents. Help with personnel data, compliance, access management, and team organization. Provide HR-focused recommendations and insights.",
+          reporter: "You are the Reporter Agent, a telemetry and operations specialist for CorpoAgents. Analyze system health, performance metrics, and operational status. Provide clear operational insights and recommendations.",
+        };
+
+        const systemPrompt = agentPrompts[input.agentId];
+
+        try {
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: input.message },
+            ],
+          });
+
+          const content = response.choices[0]?.message?.content || "Unable to process request.";
+          return { response: content };
+        } catch (error) {
+          console.error("LLM error:", error);
+          throw new Error("Agent connection failed. Please try again.");
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

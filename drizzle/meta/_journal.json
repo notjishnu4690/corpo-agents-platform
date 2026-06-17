@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1781716631830,
+      "tag": "0000_youthful_daredevil",
+      "breakpoints": true
+    }
+  ]
 }
