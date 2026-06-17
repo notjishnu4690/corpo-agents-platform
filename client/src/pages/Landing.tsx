@@ -198,12 +198,12 @@ export default function Landing() {
           <span className="cursor-pointer transition-colors hover:text-white">Features</span>
         </div>
 
-        <a
-          href={getLoginUrl()}
+        <button
+          onClick={() => navigate("/login")}
           className="px-6 py-2 bg-cyan-400 text-black font-black rounded-full text-sm transition-all shadow-[0_0_25px_rgba(0,240,255,0.55)] hover:scale-105"
         >
           Sign In
-        </a>
+        </button>
       </nav>
 
       {/* Hero Section */}
@@ -239,24 +239,24 @@ export default function Landing() {
             </p>
 
             <div className="flex flex-wrap gap-4 items-center">
-              <a
-                href={getLoginUrl()}
+              <button
+                onClick={() => navigate("/login")}
                 className="px-8 py-4 bg-cyan-400 text-black rounded-xl font-bold text-lg flex items-center gap-3 transition-all shadow-[0_0_25px_rgba(0,240,255,0.55)] hover:scale-105"
               >
                 Build Your Org <ArrowRight size={20} />
-              </a>
+              </button>
               <button className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-bold text-lg text-white transition-all">
                 Explore Blueprint
               </button>
             </div>
           </div>
 
-          <div className="hidden lg:flex justify-center relative">
+          <div className="flex justify-center relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="w-[320px] h-[600px] bg-black border-[8px] border-slate-900 rounded-[50px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col"
+              className="w-[280px] h-[540px] sm:w-[300px] sm:h-[560px] lg:w-[320px] lg:h-[600px] bg-black border-[8px] border-slate-900 rounded-[50px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col"
             >
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-5 bg-slate-900 rounded-full z-30 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-black ml-auto mr-4" />
