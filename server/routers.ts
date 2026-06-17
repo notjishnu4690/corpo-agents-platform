@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { z } from "zod";
-import { getUserMeetings, createMeeting, updateMeeting, deleteMeeting } from "./db";
+import { getUserMeetings, createMeeting, updateMeeting, deleteMeeting, getCompanyProfile, createCompanyProfile, updateCompanyProfile } from "./db";
 
 export const appRouter = router({
   system: systemRouter,
@@ -50,6 +50,25 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return deleteMeeting(input.id);
+      }),
+  }),
+
+  company: router({
+    profile: protectedProcedure.query(async ({ ctx }) => {
+      return getCompanyProfile(ctx.user.id);
+    }),
+    setup: protectedProcedure
+      .input(z.object({
+        companyName: z.string().min(1),
+        companyDescription: z.string().min(1),
+        selectedAgents: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getCompanyProfile(ctx.user.id);
+        if (existing) {
+          return updateCompanyProfile(ctx.user.id, input);
+        }
+        return createCompanyProfile(ctx.user.id, input);
       }),
   }),
 

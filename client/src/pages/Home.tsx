@@ -1,11 +1,16 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { trpc } from "@/lib/trpc";
 import Dashboard from "./Dashboard";
+import Onboarding from "./Onboarding";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const companyProfileQuery = trpc.company.profile.useQuery(undefined, {
+    enabled: isAuthenticated && !loading,
+  });
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -13,7 +18,7 @@ export default function Home() {
     }
   }, [loading, isAuthenticated, navigate]);
 
-  if (loading) {
+  if (loading || companyProfileQuery.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#020206]">
         <div className="text-white text-center space-y-4">
@@ -26,6 +31,11 @@ export default function Home() {
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  // Check if user needs onboarding
+  if (!companyProfileQuery.data) {
+    return <Onboarding />;
   }
 
   return <Dashboard />;

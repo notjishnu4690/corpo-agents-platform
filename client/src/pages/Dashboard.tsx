@@ -632,37 +632,57 @@ export default function Dashboard() {
                   </div>
 
                   <div className={`${cardBg} rounded-3xl p-8 border ${borderColor}`}>
-                    <h2 className="text-lg font-black uppercase mb-6 text-cyan-400">Scheduled Meetings</h2>
-                    <div className="space-y-3">
-                      {meetings.map((meeting) => (
-                        <div
-                          key={meeting.id}
-                          className={`p-4 rounded-2xl border flex items-center justify-between group ${
-                            theme === "dark" ? "bg-white/[0.02] border-white/10" : "bg-slate-50 border-black/5"
-                          }`}
-                        >
-                          <div className={`h-8 w-[1px] ${theme === "dark" ? "bg-white/10" : "bg-black/10"}`} />
-                          <div className="text-sm font-bold">{meeting.title}</div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                setEditingMeeting(meeting.id);
-                                setNewMeetingForm(meeting);
-                              }}
-                              className="p-2 hover:text-cyan-400"
-                            >
-                              <Settings size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteMeeting(meeting.id)}
-                              className="p-2 hover:text-rose-500"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <h2 className="text-lg font-black uppercase mb-6 text-cyan-400">Weekly Schedule</h2>
+                    {meetings.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-slate-500 mb-4">No meetings scheduled</div>
+                        <div className="text-sm text-slate-600">Add your first meeting above to get started</div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
+                          const dayMeetings = meetings.filter((m) => m.day === day).sort((a, b) => a.time.localeCompare(b.time));
+                          if (dayMeetings.length === 0) return null;
+                          return (
+                            <div key={day}>
+                              <div className="text-xs font-black uppercase text-cyan-400 mb-3">{day}</div>
+                              <div className="space-y-2 pl-4 border-l-2 border-cyan-400/30">
+                                {dayMeetings.map((meeting) => (
+                                  <div
+                                    key={meeting.id}
+                                    className={`p-4 rounded-2xl border flex items-center justify-between group ${
+                                      theme === "dark" ? "bg-white/[0.02] border-white/10 hover:bg-white/[0.05]" : "bg-slate-50 border-black/5 hover:bg-slate-100"
+                                    } transition-all`}
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-xs font-bold text-cyan-400 mb-1">{meeting.time}</div>
+                                      <div className="font-bold truncate">{meeting.title}</div>
+                                    </div>
+                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4 shrink-0">
+                                      <button
+                                        onClick={() => {
+                                          setEditingMeeting(meeting.id);
+                                          setNewMeetingForm(meeting);
+                                        }}
+                                        className="p-2 hover:text-cyan-400 transition-colors"
+                                      >
+                                        <Settings size={16} />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteMeeting(meeting.id)}
+                                        className="p-2 hover:text-rose-500 transition-colors"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>

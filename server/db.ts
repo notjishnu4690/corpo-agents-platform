@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, meetings, Meeting, InsertMeeting } from "../drizzle/schema";
+import { InsertUser, users, meetings, Meeting, InsertMeeting, companyProfiles, CompanyProfile, InsertCompanyProfile } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -154,6 +154,60 @@ export async function deleteMeeting(meetingId: number) {
     return result;
   } catch (error) {
     console.error("[Database] Failed to delete meeting:", error);
+    throw error;
+  }
+}
+
+export async function getCompanyProfile(userId: number): Promise<CompanyProfile | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get company profile: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db.select().from(companyProfiles).where(eq(companyProfiles.userId, userId)).limit(1);
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to get company profile:", error);
+    return undefined;
+  }
+}
+
+export async function createCompanyProfile(userId: number, data: { companyName: string; companyDescription: string; selectedAgents: string }) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create company profile: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(companyProfiles).values({
+      userId,
+      companyName: data.companyName,
+      companyDescription: data.companyDescription,
+      selectedAgents: data.selectedAgents,
+      isOnboarded: 1,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create company profile:", error);
+    throw error;
+  }
+}
+
+export async function updateCompanyProfile(userId: number, data: { companyName?: string; companyDescription?: string; selectedAgents?: string }) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update company profile: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.update(companyProfiles).set(data).where(eq(companyProfiles.userId, userId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update company profile:", error);
     throw error;
   }
 }

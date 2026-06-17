@@ -41,3 +41,21 @@ export const meetings = mysqlTable(
 
 export type Meeting = typeof meetings.$inferSelect;
 export type InsertMeeting = typeof meetings.$inferInsert;
+
+export const companyProfiles = mysqlTable(
+  "companyProfiles",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull().unique(),
+    companyName: text("companyName").notNull(),
+    companyDescription: text("companyDescription").notNull(),
+    selectedAgents: varchar("selectedAgents", { length: 255 }).notNull(),
+    isOnboarded: int("isOnboarded").default(0).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => [foreignKey({ columns: [table.userId], foreignColumns: [users.id] })]
+);
+
+export type CompanyProfile = typeof companyProfiles.$inferSelect;
+export type InsertCompanyProfile = typeof companyProfiles.$inferInsert;
