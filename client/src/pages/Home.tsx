@@ -34,7 +34,10 @@ export default function Home() {
   }
 
   // Check if user needs onboarding
-  if (!companyProfileQuery.data) {
+  // We check if data exists AND if the profile is actually completed
+  const isProfileComplete = companyProfileQuery.data && companyProfileQuery.data.companyName && companyProfileQuery.data.companyDescription;
+
+  if (!isProfileComplete) {
     return <Onboarding />;
   }
 
