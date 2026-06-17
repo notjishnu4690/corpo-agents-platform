@@ -55,7 +55,8 @@ export const appRouter = router({
 
   company: router({
     profile: protectedProcedure.query(async ({ ctx }) => {
-      return getCompanyProfile(ctx.user.id);
+      const profile = await getCompanyProfile(ctx.user.id);
+      return profile || null;
     }),
     setup: protectedProcedure
       .input(z.object({
