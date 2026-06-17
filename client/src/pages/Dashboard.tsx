@@ -43,7 +43,7 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-interface Meeting {
+interface MeetingDisplay {
   id: string;
   day: string;
   time: string;
@@ -63,11 +63,18 @@ export default function Dashboard() {
   });
   const [chatInput, setChatInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [meetings, setMeetings] = useState<Meeting[]>([
-    { id: "1", day: "Mon", time: "09:00", title: "CEO Sync" },
-    { id: "2", day: "Wed", time: "13:00", title: "HR Ops Check" },
-    { id: "3", day: "Fri", time: "10:00", title: "Weekly Report" },
-  ]);
+  const meetingsQuery = trpc.meetings.list.useQuery();
+  const createMeetingMutation = trpc.meetings.create.useMutation();
+  const updateMeetingMutation = trpc.meetings.update.useMutation();
+  const deleteMeetingMutation = trpc.meetings.delete.useMutation();
+  const utils = trpc.useUtils();
+  
+  const meetings = (meetingsQuery.data || []).map(m => ({
+    id: m.id.toString(),
+    day: m.day,
+    time: m.time,
+    title: m.title,
+  }));
   const [editingMeeting, setEditingMeeting] = useState<string | null>(null);
   const [newMeetingForm, setNewMeetingForm] = useState({ day: "Mon", time: "09:00", title: "" });
   const [vitalsData, setVitalsData] = useState({
@@ -143,29 +150,37 @@ export default function Dashboard() {
     }, 1800);
   };
 
-  const handleAddMeeting = () => {
+  const handleAddMeeting = async () => {
     if (!newMeetingForm.title.trim()) return;
-    if (editingMeeting === "new") {
-      setMeetings([
-        ...meetings,
-        {
-          id: Date.now().toString(),
+    try {
+      if (editingMeeting === "new") {
+        await createMeetingMutation.mutateAsync(newMeetingForm);
+        toast.success("Meeting created");
+      } else if (editingMeeting) {
+        await updateMeetingMutation.mutateAsync({
+          id: parseInt(editingMeeting),
           ...newMeetingForm,
-        },
-      ]);
-    } else if (editingMeeting) {
-      setMeetings(
-        meetings.map((m) =>
-          m.id === editingMeeting ? { ...m, ...newMeetingForm } : m
-        )
-      );
+        });
+        toast.success("Meeting updated");
+      }
+      await utils.meetings.list.invalidate();
+      setNewMeetingForm({ day: "Mon", time: "09:00", title: "" });
+      setEditingMeeting(null);
+    } catch (error) {
+      toast.error("Failed to save meeting");
+      console.error(error);
     }
-    setNewMeetingForm({ day: "Mon", time: "09:00", title: "" });
-    setEditingMeeting(null);
   };
 
-  const handleDeleteMeeting = (id: string) => {
-    setMeetings(meetings.filter((m) => m.id !== id));
+  const handleDeleteMeeting = async (id: string) => {
+    try {
+      await deleteMeetingMutation.mutateAsync({ id: parseInt(id) });
+      await utils.meetings.list.invalidate();
+      toast.success("Meeting deleted");
+    } catch (error) {
+      toast.error("Failed to delete meeting");
+      console.error(error);
+    }
   };
 
   const bgColor = theme === "dark" ? "bg-[#020206]" : "bg-slate-50";

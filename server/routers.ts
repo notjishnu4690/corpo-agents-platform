@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { z } from "zod";
+import { getUserMeetings, createMeeting, updateMeeting, deleteMeeting } from "./db";
 
 export const appRouter = router({
   system: systemRouter,
@@ -16,6 +17,40 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  meetings: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return getUserMeetings(ctx.user.id);
+    }),
+    create: protectedProcedure
+      .input(z.object({
+        day: z.string(),
+        time: z.string(),
+        title: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return createMeeting(ctx.user.id, input);
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        day: z.string().optional(),
+        time: z.string().optional(),
+        title: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return updateMeeting(input.id, {
+          day: input.day,
+          time: input.time,
+          title: input.title,
+        });
+      }),
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return deleteMeeting(input.id);
+      }),
   }),
 
   agents: router({

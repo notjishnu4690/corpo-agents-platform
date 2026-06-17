@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, meetings, Meeting, InsertMeeting } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,71 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getUserMeetings(userId: number): Promise<Meeting[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get meetings: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db.select().from(meetings).where(eq(meetings.userId, userId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get meetings:", error);
+    return [];
+  }
+}
+
+export async function createMeeting(userId: number, data: { day: string; time: string; title: string }) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create meeting: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(meetings).values({
+      userId,
+      day: data.day,
+      time: data.time,
+      title: data.title,
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create meeting:", error);
+    throw error;
+  }
+}
+
+export async function updateMeeting(meetingId: number, data: { day?: string; time?: string; title?: string }) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update meeting: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.update(meetings).set(data).where(eq(meetings.id, meetingId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update meeting:", error);
+    throw error;
+  }
+}
+
+export async function deleteMeeting(meetingId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete meeting: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.delete(meetings).where(eq(meetings.id, meetingId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to delete meeting:", error);
+    throw error;
+  }
+}
